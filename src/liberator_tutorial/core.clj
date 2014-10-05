@@ -18,7 +18,20 @@
                            :handle-ok (fn [ctx]
                                         (format "<html>It's %d milliseconds since the beginning of the epoch."
                                                 (System/currentTimeMillis)))))
-  (ANY "/foo/:txt" [txt] (parameter txt)))
+  (ANY "/foo/:txt" [txt] (parameter txt))
+  (ANY "/choice" []
+       (resource :available-media-types ["text/html"]
+                 :exists? (fn [ctx]
+                            (if-let [choice
+                                     (get {"1" "stone" "2" "paper" "3" "scissors"}
+                                          (get-in ctx [:request :params "choice"]))]
+                              {:choice choice}))
+                 :handle-ok (fn [ctx]
+                              (format "<html>Your choice: &quot;%s&quot;."
+                                      (get ctx :choice)))
+                 :handle-not-found (fn [ctx]
+                                     (format "<html>There is no value for the option &quot;%s&quot;"
+                                             (get-in ctx [:request :params "choice"] ""))))))
 
 (def handler 
   (-> app wrap-params))
